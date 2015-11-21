@@ -74,8 +74,7 @@ public:
 
   template <typename F>
   auto submit(F&& f) -> std::future<decltype(f())> {
-    typedef decltype(f()) R;
-    auto p = std::make_shared<std::packaged_task<R()>>(std::forward<F>(f));
+    auto p = std::make_shared<std::packaged_task<decltype(f())()>>(std::forward<F>(f));
     m.lock();
     auto l = [p]() {
       (*p)();
@@ -87,8 +86,7 @@ public:
 
   template <typename F, typename... A>
   auto submit(F&& f, A&&... a) -> std::future<decltype(f(a...))> {
-    typedef decltype(f(a...)) R;
-    auto p = std::make_shared<std::packaged_task<R()>>(std::bind(std::forward<F>(f), std::forward<A>(a)...));
+    auto p = std::make_shared<std::packaged_task<decltype(f(a...))()>>(std::bind(std::forward<F>(f), std::forward<A>(a)...));
     m.lock();
     auto l = [p]() {
       (*p)();
