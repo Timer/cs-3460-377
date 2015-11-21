@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 
+//TODO: reject submit when pool is shutdown
 class Pool {
 private:
   //Count of threads in the pool
