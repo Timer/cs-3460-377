@@ -3,19 +3,16 @@
 
 #include "pool.hpp"
 #include <future>
-#include <cstdio>
 
 namespace Promise {
 template <typename T, typename F>
-auto then(std::shared_future<T> fut, F f) -> std::future<decltype(f(fut.get()))> {
-  return std::async(std::launch::async, [fut, f]() {
-    try {
-      auto v = fut.get();
-      return f(v);
-    } catch (...) {
-      throw std::current_exception();
-    }
-  });
+auto then(std::shared_future<T> fut, F &&f) -> std::future<decltype(f(fut))> {
+  auto p = std::make_shared<std::packaged_task<decltype(f(fut))()>>(std::bind(std::forward<F>(f), fut));
+  auto l = [p]() {
+    (*p)();
+  };
+  std::async(std::launch::async, std::move(l));
+  return p->get_future();
 }
 };
 
