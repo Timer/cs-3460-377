@@ -72,104 +72,8 @@ public:
 
   int size() const { return this->count; }
 
-  template <typename F, typename... A>
-  std::future<void> v2(F&& f, A&&... a) {
-    auto pack = std::packaged_task<decltype(f(a...))>(std::bind(std::forward<F>(f), std::forward<A>(a)...));
-  }
-
-  std::future<void> run(std::function<void()> f) {
-    std::atomic<bool>* ready = new std::atomic<bool>(false);
-    std::promise<void>* p = new std::promise<void>;
-    auto task = [ready, p](std::function<void()>&& f) {
-      try {
-        f();
-        p->set_value();
-      } catch (...) { p->set_exception(std::current_exception()); }
-      ready->store(true);
-    };
-    auto v = [ready, p]() {
-      while (!ready->load()) std::this_thread::yield();
-      p->get_future().get();
-      delete ready;
-      delete p;
-    };
-    m.lock();
-    jobs.emplace_back(std::async(std::launch::deferred, task, std::move(f)));
-    m.unlock();
-    return std::async(std::launch::deferred, v);
-  }
-
-  template <typename... A>
-  std::future<void> run(std::function<void(A...)> f, A... a) {
-    std::atomic<bool>* ready = new std::atomic<bool>(false);
-    std::promise<void>* p = new std::promise<void>;
-    auto task = [ready, p](std::function<void(A...)>&& f, A&&... a) {
-      try {
-        f(a...);
-        p->set_value();
-      } catch (...) { p->set_exception(std::current_exception()); }
-      ready->store(true);
-    };
-    auto v = [ready, p]() {
-      while (!ready->load()) std::this_thread::yield();
-      p->get_future().get();
-      delete ready;
-      delete p;
-    };
-    m.lock();
-    jobs.emplace_back(std::async(std::launch::deferred, task, std::move(f), std::move(a)...));
-    m.unlock();
-    return std::async(std::launch::deferred, v);
-  }
-
-  template <typename R>
-  std::future<R> submit(std::function<R()> f) {
-    std::atomic<bool>* ready = new std::atomic<bool>(false);
-    std::promise<R>* p = new std::promise<R>;
-    auto task = [ready, p](std::function<R()>&& f) {
-      try {
-        p->set_value(f());
-      } catch (...) { p->set_exception(std::current_exception()); }
-      ready->store(true);
-    };
-    auto v = [ready, p]() {
-      while (!ready->load()) std::this_thread::yield();
-      auto r = p->get_future().get();
-      delete ready;
-      delete p;
-      return r;
-    };
-    m.lock();
-    jobs.emplace_back(std::async(std::launch::deferred, task, std::move(f)));
-    m.unlock();
-    return std::async(std::launch::deferred, v);
-  }
-
-  template <typename R, typename... A>
-  std::future<R> submit(std::function<R(A...)> f, A... a) {
-    std::atomic<bool>* ready = new std::atomic<bool>(false);
-    std::promise<R>* p = new std::promise<R>;
-    auto task = [ready, p](std::function<R(A...)>&& f, A&&... a) {
-      try {
-        p->set_value(f(a...));
-      } catch (...) { p->set_exception(std::current_exception()); }
-      ready->store(true);
-    };
-    auto v = [ready, p]() {
-      while (!ready->load()) std::this_thread::yield();
-      auto r = p->get_future().get();
-      delete ready;
-      delete p;
-      return r;
-    };
-    m.lock();
-    jobs.emplace_back(std::async(std::launch::deferred, task, std::move(f), std::move(a)...));
-    m.unlock();
-    return std::async(std::launch::deferred, v);
-  }
-
   template <typename F>
-  auto offer(F&& f) -> std::future<decltype(f())> {
+  auto submit(F&& f) -> std::future<decltype(f())> {
     typedef decltype(f()) R;
     auto p = std::make_shared<std::packaged_task<R()>>(std::forward<F>(f));
     m.lock();
@@ -182,7 +86,7 @@ public:
   }
 
   template <typename F, typename... A>
-  auto offer(F&& f, A&&... a) -> std::future<decltype(f(a...))> {
+  auto submit(F&& f, A&&... a) -> std::future<decltype(f(a...))> {
     typedef decltype(f(a...)) R;
     auto p = std::make_shared<std::packaged_task<R()>>(std::bind(std::forward<F>(f), std::forward<A>(a)...));
     m.lock();
