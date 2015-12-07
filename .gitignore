@@ -1,2 +1,10 @@
 *.out
 *.dSYM/
+
+# Visual Studio stuff
+[Dd]ebug/
+x64/
+*.opendb
+*.user
+*.sdf
+*.suo
