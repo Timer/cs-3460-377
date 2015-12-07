@@ -25,25 +25,25 @@ void conv(Pool &pool, matrix &x, const matrix &k) {
   // Do the convolution
   std::vector<std::future<void>> wv;
   for (unsigned row = 0; row < x.rows; row++) {
-	  wv.push_back(pool.submit([row, &x, &y, &k, weight] {
-		for (unsigned col = 0; col < x.cols; col++) {
-		  int t = 0;
+    wv.push_back(pool.submit([row, &x, &y, &k, weight] {
+      for (unsigned col = 0; col < x.cols; col++) {
+        int t = 0;
 
-		  auto yrow = row;
-		  for (int krow = k.rows - 1; krow >= 0; krow--, yrow++) {
-			auto ycol = col;
-			for (int kcol = k.cols - 1; kcol >= 0; kcol--, ycol++) {
-			  t += y(yrow, ycol) * k(krow, kcol);
-			}
-		  }
+        auto yrow = row;
+        for (int krow = k.rows - 1; krow >= 0; krow--, yrow++) {
+          auto ycol = col;
+          for (int kcol = k.cols - 1; kcol >= 0; kcol--, ycol++) {
+            t += y(yrow, ycol) * k(krow, kcol);
+          }
+        }
 
-		  if (weight != 0) {
-			t /= weight;
-		  }
+        if (weight != 0) {
+          t /= weight;
+        }
 
-		  x(row, col) = t;
-		}
-	  }));
+        x(row, col) = t;
+      }
+    }));
   }
   for (auto it = wv.begin(); it != wv.end(); ++it) it->wait();
 }
@@ -77,7 +77,7 @@ matrix binomial(int n) {
 }
 
 int main(int argc, char **argv) {
-	Pool pool;
+  Pool pool;
 
   auto bmp = load_image("C:\\Users\\Joe\\Desktop\\test.jpg");
   auto orig = bmp;
