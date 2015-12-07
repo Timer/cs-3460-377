@@ -17,7 +17,7 @@ void merge_sort(const int concurrency_level, const int depth, int array[], const
   });
   lh.get();
   rh.get();
-  int temp[right - left + 1];
+  int *temp = new int[right - left + 1];
   int k = 0, l = left, m = middle + 1;
   while (l <= middle && m <= right) {
     if (array[l] < array[m]) {
@@ -29,6 +29,7 @@ void merge_sort(const int concurrency_level, const int depth, int array[], const
   while (l <= middle) temp[k++] = array[l++];
   while (m <= right) temp[k++] = array[m++];
   for (int v = 0, i = left; i <= right; ++i, ++v) array[i] = temp[v];
+  delete[] temp;
 }
 
 void merge_sort(int array[], const int left, const int right) {
