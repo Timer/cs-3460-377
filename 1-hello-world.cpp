@@ -5,6 +5,6 @@ int main(int argc, char **argv) {
   Pool pool(1);
   pool.submit([]() {
     puts("Hello world!");
-  }).get();
+  }).wait();
   return 0;
 }
