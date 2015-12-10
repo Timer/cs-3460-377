@@ -102,14 +102,17 @@
     <ClCompile Include="3-convolution.cpp" />
     <ClCompile Include="4-sort.cpp" />
     <ClCompile Include="5-static-serve.cpp" />
+    <ClCompile Include="vendor\http_parser.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lib\http.hpp" />
     <ClInclude Include="lib\image.hpp" />
     <ClInclude Include="lib\matrix.hpp" />
     <ClInclude Include="lib\network.hpp" />
     <ClInclude Include="lib\pool.hpp" />
     <ClInclude Include="lib\promise-polyfill.hpp" />
     <ClInclude Include="lib\time.hpp" />
+    <ClInclude Include="vendor\http_parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
