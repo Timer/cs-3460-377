@@ -3,46 +3,42 @@
 #include "lib/promise-polyfill.hpp"
 #include <cstdio>
 
-cs477::net::http_response make_response(int status, const std::string &json)
-{
-	cs477::net::http_response rsp;
-	rsp.status = status;
-	switch (status)
-	{
-	case 200:{
-		rsp.message = "Ok";
-		break;
-	}
-	case 404:{
-		rsp.message = "Not Found";
-		break;
-	}
-	case 500:{
-		rsp.message = "Internal Error";
-		break;
-	}
-	}
+cs477::net::http_response make_response(int status, const std::string &json) {
+  cs477::net::http_response rsp;
+  rsp.status = status;
+  switch (status) {
+  case 200: {
+    rsp.message = "Ok";
+    break;
+  }
+  case 404: {
+    rsp.message = "Not Found";
+    break;
+  }
+  case 500: {
+    rsp.message = "Internal Error";
+    break;
+  }
+  }
 
-	if (status == 200)
-	{
-		if (json.length())
-		{
-			rsp.body = json;
-			rsp.headers.emplace_back("Content-Type", "application/json");
-		}
-	}
+  if (status == 200) {
+    if (json.length()) {
+      rsp.body = json;
+      rsp.headers.emplace_back("Content-Type", "application/json");
+    }
+  }
 
-	return rsp;
+  return rsp;
 }
 
 void socket_handler(cs477::net::socket sock) {
   auto f = cs477::net::read_http_request_async(sock).share();
   Promise::then(f, [sock](auto s) {
-	  auto rq = s.get();
-	  int status = 200;
-	  std::string result = "Working baby!";
-	  auto rsp = make_response(200, result);
-	  cs477::net::write_http_response_async(sock, rsp);
+    auto rq = s.get();
+    int status = 200;
+    std::string result = "Working baby!";
+    auto rsp = make_response(200, result);
+    cs477::net::write_http_response_async(sock, rsp);
   });
 }
 
