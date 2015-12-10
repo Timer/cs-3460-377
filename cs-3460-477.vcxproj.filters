@@ -44,5 +44,8 @@
     <ClInclude Include="lib\image.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lib\time.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

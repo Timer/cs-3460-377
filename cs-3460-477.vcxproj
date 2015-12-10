@@ -108,6 +108,7 @@
     <ClInclude Include="lib\matrix.hpp" />
     <ClInclude Include="lib\pool.hpp" />
     <ClInclude Include="lib\promise-polyfill.hpp" />
+    <ClInclude Include="lib\time.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
