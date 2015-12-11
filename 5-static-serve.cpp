@@ -22,10 +22,10 @@ cs477::net::http_response make_response(int status, const std::string &content, 
   }
   }
 
-	if (content.length()) {
-		rsp.body = content;
-		rsp.headers.emplace_back("Content-Type", contentType);
-	}
+  if (content.length()) {
+    rsp.body = content;
+    rsp.headers.emplace_back("Content-Type", contentType);
+  }
 
   return rsp;
 }
@@ -34,34 +34,33 @@ void socket_handler(cs477::net::socket sock) {
   auto f = cs477::net::read_http_request_async(sock).share();
   Promise::then(f, [sock](auto s) {
     auto rq = s.get();
-	std::string path = rq.url;
-	auto pos = path.find("/");
-	if (pos != std::string::npos) {
-		for (;;) {
-			if (pos + 1 >= path.length()) break;
-			auto pos2 = path.find("/", pos + 1);
-			if (pos2 != std::string::npos) pos = pos2;
-			else break;
-		}
-		path = path.substr(pos + 1);
-		if (path.length() < 1) {
-			cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
-		}
-		else {
-			try {
-				Promise::then(read_file_async(path.c_str()).share(), [sock](auto f) {
-										auto s = f.get();
-						cs477::net::write_http_response_async(sock, make_response(200, s, "text/plain"));
-				});
-			}
-			catch (...) {
-				cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
-			}
-		}
-	}
-	else {
-		cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
-	}
+    std::string path = rq.url;
+    auto pos = path.find("/");
+    if (pos != std::string::npos) {
+      for (;;) {
+        if (pos + 1 >= path.length()) break;
+        auto pos2 = path.find("/", pos + 1);
+        if (pos2 != std::string::npos)
+          pos = pos2;
+        else
+          break;
+      }
+      path = path.substr(pos + 1);
+      if (path.length() < 1) {
+        cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
+      } else {
+        try {
+          Promise::then(read_file_async(path.c_str()).share(), [sock](auto f) {
+            auto s = f.get();
+            cs477::net::write_http_response_async(sock, make_response(200, s, "text/plain"));
+          });
+        } catch (...) {
+          cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
+        }
+      }
+    } else {
+      cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
+    }
   });
 }
 
