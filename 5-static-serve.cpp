@@ -2,7 +2,7 @@
 #include "lib/http.hpp"
 #include "lib/promise-polyfill.hpp"
 #include <cstdio>
-#include <fstream>
+#include "lib/file.hpp"
 
 cs477::net::http_response make_response(int status, const std::string &content, const std::string &contentType) {
   cs477::net::http_response rsp;
@@ -48,15 +48,15 @@ void socket_handler(cs477::net::socket sock) {
 			cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
 		}
 		else {
-			std::ifstream in(path);
-			if (in) {
-				std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-				cs477::net::write_http_response_async(sock, make_response(200, s, "text/plain"));
+			try {
+				Promise::then(read_file_async(path.c_str()).share(), [sock](auto f) {
+										auto s = f.get();
+						cs477::net::write_http_response_async(sock, make_response(200, s, "text/plain"));
+				});
 			}
-			else {
+			catch (...) {
 				cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
 			}
-			in.close();
 		}
 	}
 	else {

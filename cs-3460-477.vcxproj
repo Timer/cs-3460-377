@@ -106,6 +106,7 @@
     <ClCompile Include="vendor\http_parser.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lib\file.hpp" />
     <ClInclude Include="lib\http.hpp" />
     <ClInclude Include="lib\image.hpp" />
     <ClInclude Include="lib\matrix.hpp" />
