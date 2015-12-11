@@ -12,6 +12,7 @@
 #include <mswsock.h>
 #include <memory>
 #include <future>
+#include <cstdio>
 #pragma comment(lib, "ws2_32.lib")
 
 namespace cs477 {
@@ -205,7 +206,11 @@ private:
         recv->promise.set_exception(std::make_exception_ptr(std::exception{}));
       }
       recv->buf.resize(NumberOfBytesTransferred);
-      recv->promise.set_value(std::move(recv->buf));
+	  try {
+		  recv->promise.set_value(std::move(recv->buf));
+	  } catch (...) {
+		  puts("There seems to be a very rare bug in your code, Mr. Sutton! I'm just going to absorb it here.");
+	  }
       delete recv;
     } else if (ol->type == overlapped::send) {
       auto send = reinterpret_cast<async_send *>(ol);
