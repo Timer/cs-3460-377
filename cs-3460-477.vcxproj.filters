@@ -33,6 +33,9 @@
     <ClCompile Include="vendor\http_parser.c">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="6-primes-ipc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lib\pool.hpp">

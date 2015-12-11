@@ -102,6 +102,7 @@
     <ClCompile Include="3-convolution.cpp" />
     <ClCompile Include="4-sort.cpp" />
     <ClCompile Include="5-static-serve.cpp" />
+    <ClCompile Include="6-primes-ipc.cpp" />
     <ClCompile Include="vendor\http_parser.c" />
   </ItemGroup>
   <ItemGroup>
