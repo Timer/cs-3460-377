@@ -2,8 +2,9 @@
 #include "lib/http.hpp"
 #include "lib/promise-polyfill.hpp"
 #include <cstdio>
+#include <fstream>
 
-cs477::net::http_response make_response(int status, const std::string &json) {
+cs477::net::http_response make_response(int status, const std::string &content, const std::string &contentType) {
   cs477::net::http_response rsp;
   rsp.status = status;
   switch (status) {
@@ -21,12 +22,10 @@ cs477::net::http_response make_response(int status, const std::string &json) {
   }
   }
 
-  if (status == 200) {
-    if (json.length()) {
-      rsp.body = json;
-      rsp.headers.emplace_back("Content-Type", "application/json");
-    }
-  }
+	if (content.length()) {
+		rsp.body = content;
+		rsp.headers.emplace_back("Content-Type", contentType);
+	}
 
   return rsp;
 }
@@ -35,10 +34,34 @@ void socket_handler(cs477::net::socket sock) {
   auto f = cs477::net::read_http_request_async(sock).share();
   Promise::then(f, [sock](auto s) {
     auto rq = s.get();
-    int status = 200;
-    std::string result = "Working baby!";
-    auto rsp = make_response(200, result);
-    cs477::net::write_http_response_async(sock, rsp);
+	std::string path = rq.url;
+	auto pos = path.find("/");
+	if (pos != std::string::npos) {
+		for (;;) {
+			if (pos + 1 >= path.length()) break;
+			auto pos2 = path.find("/", pos + 1);
+			if (pos2 != std::string::npos) pos = pos2;
+			else break;
+		}
+		path = path.substr(pos + 1);
+		if (path.length() < 1) {
+			cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
+		}
+		else {
+			std::ifstream in(path);
+			if (in) {
+				std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+				cs477::net::write_http_response_async(sock, make_response(200, s, "text/plain"));
+			}
+			else {
+				cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
+			}
+			in.close();
+		}
+	}
+	else {
+		cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
+	}
   });
 }
 
