@@ -5,8 +5,8 @@
 #include <thread>
 #include <cstdio>
 #include <cmath>
-#include "lib/time.hpp"
-#include "lib/pool.hpp"
+#include "../lib/time.hpp"
+#include "../lib/pool.hpp"
 
 template <class Iter>
 void merge_sort(std::atomic<int> &threads, Pool &pool, int forks, const Iter &start, const Iter &end) {

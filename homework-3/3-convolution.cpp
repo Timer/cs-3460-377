@@ -1,6 +1,6 @@
-#include "lib/matrix.hpp"
-#include "lib/image.hpp"
-#include "lib/time.hpp"
+#include "../lib/matrix.hpp"
+#include "../lib/image.hpp"
+#include "../lib/time.hpp"
 
 void conv(matrix &x, const matrix &k) {
   matrix y;

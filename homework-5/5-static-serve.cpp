@@ -1,8 +1,8 @@
-#include "lib/network.hpp"
-#include "lib/http.hpp"
-#include "lib/promise-polyfill.hpp"
+#include "../lib/network.hpp"
+#include "../lib/http.hpp"
+#include "../lib/promise-polyfill.hpp"
 #include <cstdio>
-#include "lib/file.hpp"
+#include "../lib/file.hpp"
 
 cs477::net::http_response make_response(int status, const std::string &content, const std::string &contentType) {
   cs477::net::http_response rsp;

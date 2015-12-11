@@ -1,4 +1,4 @@
-#include "lib/pool.hpp"
+#include "../lib/pool.hpp"
 #include <cstdio>
 #include <cstdlib>
 
