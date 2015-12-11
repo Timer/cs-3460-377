@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HTTP_HPP
+#define HTTP_HPP
 
 #include <string>
 #include <vector>
@@ -239,3 +240,5 @@ inline const std::error_category &http_category() {
 }
 }
 }
+
+#endif
