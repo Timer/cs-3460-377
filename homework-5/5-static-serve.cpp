@@ -4,6 +4,8 @@
 #include <cstdio>
 #include "../lib/file.hpp"
 
+#define PATH_DISABLED false
+
 cs477::net::http_response make_response(int status, const std::string &content, const std::string &contentType) {
   cs477::net::http_response rsp;
   rsp.status = status;
@@ -37,6 +39,7 @@ void socket_handler(cs477::net::socket sock) {
     std::string path = rq.url;
     auto pos = path.find("/");
     if (pos != std::string::npos) {
+#if PATH_DISABLED
       for (;;) {
         if (pos + 1 >= path.length()) break;
         auto pos2 = path.find("/", pos + 1);
@@ -45,6 +48,7 @@ void socket_handler(cs477::net::socket sock) {
         else
           break;
       }
+#endif
       path = path.substr(pos + 1);
       if (path.length() < 1) {
         cs477::net::write_http_response_async(sock, make_response(404, "File not found.", "text/plain"));
