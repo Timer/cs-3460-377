@@ -71,6 +71,28 @@ public:
     delete shutdown;
   }
 
+  template <typename Iter, typename Fn>
+  void parallel_for(Iter start, Iter end, Fn fn) {
+    const int THREADS = size();
+    const int COUNT = end - start;
+    auto block_size = COUNT / size();
+    if (block_size < 1) block_size = 1;
+    std::vector<std::future<void>> futures;
+    futures.reserve(THREADS);
+    auto curr = start;
+    for (auto i = 0; i < THREADS && curr < end; ++i) {
+      auto next = curr + block_size;
+      if (next >= end) {
+        next = end;
+      }
+      futures.push_back(submit([curr, next, fn]() {
+        for (auto j = curr; j != next; ++j) fn(j);
+      }));
+      curr = next;
+    }
+    for (auto it = futures.begin(); it != futures.end(); ++it) it->wait();
+  }
+
   int size() const { return this->count; }
 
   template <typename F>
