@@ -15,6 +15,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "homework-5", "homework-5\ho
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "homework-6", "homework-6\homework-6.vcxproj", "{2F50BB2C-BE80-48A2-9393-2E4CD594DFDE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AB51E6A3-0A16-43AA-AE10-3542ACFA6F0B}"
+	ProjectSection(SolutionItems) = preProject
+		lib\file.hpp = lib\file.hpp
+		lib\http.hpp = lib\http.hpp
+		lib\image.hpp = lib\image.hpp
+		lib\matrix.hpp = lib\matrix.hpp
+		lib\network.hpp = lib\network.hpp
+		lib\pool.hpp = lib\pool.hpp
+		lib\promise-polyfill.hpp = lib\promise-polyfill.hpp
+		lib\time.hpp = lib\time.hpp
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
