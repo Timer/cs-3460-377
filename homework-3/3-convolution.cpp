@@ -1,47 +1,43 @@
 #include "../lib/matrix.hpp"
 #include "../lib/image.hpp"
 #include "../lib/time.hpp"
+#include "../lib/pool.hpp"
+#include <atomic>
 
-void conv(matrix &x, const matrix &k) {
+void conv(Pool &pool, matrix &x, const matrix &k) {
   matrix y;
   y.create(x.rows + k.rows, x.cols + k.cols);
 
-  for (unsigned row = 0; row < x.rows; row++) {
-    for (unsigned col = 0; col < x.cols; col++) {
-      auto yrow = row + k.rows / 2;
-      auto ycol = col + k.cols / 2;
-      y(yrow, ycol) = x(row, col);
-    }
-  }
+  const unsigned xR = x.rows, xC = x.cols;
+  pool.parallel_for(0u, xR * xC, [&](auto i) {
+	  auto row = i % xR, col = i / xR;
+	  auto yrow = row + k.rows / 2;
+	  auto ycol = col + k.cols / 2;
+	  y(yrow, ycol) = x(row, col);
+  });
 
-  // Compute sum of k
-  int weight = 0;
-  for (unsigned row = 0; row < k.rows; row++) {
-    for (unsigned col = 0; col < k.cols; col++) {
-      weight += k(row, col);
-    }
-  }
+  std::atomic<int> weight(0);
+  const unsigned kR = k.rows, kC = k.cols;
+  pool.parallel_for(0u, kR * kC, [&](int i) {
+	  auto row = i % kR, col = i / kR;
+	  weight += k(row, col);
+  });
 
-  // Do the convolution
-  for (unsigned row = 0; row < x.rows; row++) {
-    for (unsigned col = 0; col < x.cols; col++) {
-      int t = 0;
-
-      auto yrow = row;
-      for (int krow = k.rows - 1; krow >= 0; krow--, yrow++) {
-        auto ycol = col;
-        for (int kcol = k.cols - 1; kcol >= 0; kcol--, ycol++) {
-          t += y(yrow, ycol) * k(krow, kcol);
-        }
-      }
-
-      if (weight != 0) {
-        t /= weight;
-      }
-
-      x(row, col) = t;
-    }
-  }
+  pool.parallel_for(0u, xR * xC, [&](int i) {
+	  auto row = i % xR, col = i / xR;
+	  int t = 0;
+	  auto yrow = row;
+	  for (int krow = k.rows - 1; krow >= 0; krow--, yrow++) {
+		  auto ycol = col;
+		  for (int kcol = k.cols - 1; kcol >= 0; kcol--, ycol++) {
+			  t += y(yrow, ycol) * k(krow, kcol);
+		  }
+	  }
+	  if (weight != 0) {
+		  t /= weight;
+	  }
+	  x(row, col) = t;
+  });
 }
 
 int binomial_coefficient(int n, int k) {
@@ -78,11 +74,10 @@ int main(int argc, char **argv) {
 
   matrix kernel = binomial(3);
 
+  Pool pool;
   auto start = now();
-  conv(bmp, kernel);
-  auto stop = now();
-
-  printf("%g\n", to_seconds(start, stop));
+  conv(pool, bmp, kernel);
+  printf("Blurred in %d ms.\n", to_milliseconds(start, now()));
 
   save_png(bmp, "C:\\Users\\Joe\\Desktop\\test.png");
   return 0;
