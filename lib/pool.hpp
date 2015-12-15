@@ -45,8 +45,8 @@ private:
         //No work, go (back) to sleep!
         m.unlock();
 
-		std::unique_lock<std::mutex> lock(m2);
-		cv.wait(lock);
+        std::unique_lock<std::mutex> lock(m2);
+        cv.wait(lock);
       } else {
         //Ermahgerd we have work! Leggo.
         auto f = std::move(jobs.front());
@@ -69,10 +69,10 @@ public:
   ~Pool() {
     //Signal shutdown to the workers
     shutdown->store(true);
-	{
-		std::unique_lock<std::mutex> lock(m2);
-		cv.notify_all();
-	}
+    {
+      std::unique_lock<std::mutex> lock(m2);
+      cv.notify_all();
+    }
     //Wait for all workers to finish current work
     for (auto i = threads.begin(); i != threads.end(); ++i) i->join();
     //Clean up our atomic variable
@@ -112,8 +112,8 @@ public:
     };
     jobs.emplace_back(std::async(std::launch::deferred, std::move(l)));
     m.unlock();
-	std::unique_lock<std::mutex> lock(m2);
-	cv.notify_one();
+    std::unique_lock<std::mutex> lock(m2);
+    cv.notify_one();
     return p->get_future();
   }
 
@@ -126,8 +126,8 @@ public:
     };
     jobs.emplace_back(std::async(std::launch::deferred, std::move(l)));
     m.unlock();
-	std::unique_lock<std::mutex> lock(m2);
-	cv.notify_one();
+    std::unique_lock<std::mutex> lock(m2);
+    cv.notify_one();
     return p->get_future();
   }
 };

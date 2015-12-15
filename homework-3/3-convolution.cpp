@@ -10,33 +10,33 @@ void conv(Pool &pool, matrix &x, const matrix &k) {
 
   const unsigned xR = x.rows, xC = x.cols;
   pool.parallel_for(0u, xR * xC, [&](auto i) {
-	  auto row = i % xR, col = i / xR;
-	  auto yrow = row + k.rows / 2;
-	  auto ycol = col + k.cols / 2;
-	  y(yrow, ycol) = x(row, col);
+    auto row = i % xR, col = i / xR;
+    auto yrow = row + k.rows / 2;
+    auto ycol = col + k.cols / 2;
+    y(yrow, ycol) = x(row, col);
   });
 
   std::atomic<int> weight(0);
   const unsigned kR = k.rows, kC = k.cols;
   pool.parallel_for(0u, kR * kC, [&](int i) {
-	  auto row = i % kR, col = i / kR;
-	  weight += k(row, col);
+    auto row = i % kR, col = i / kR;
+    weight += k(row, col);
   });
 
   pool.parallel_for(0u, xR * xC, [&](int i) {
-	  auto row = i % xR, col = i / xR;
-	  int t = 0;
-	  auto yrow = row;
-	  for (int krow = k.rows - 1; krow >= 0; krow--, yrow++) {
-		  auto ycol = col;
-		  for (int kcol = k.cols - 1; kcol >= 0; kcol--, ycol++) {
-			  t += y(yrow, ycol) * k(krow, kcol);
-		  }
-	  }
-	  if (weight != 0) {
-		  t /= weight;
-	  }
-	  x(row, col) = t;
+    auto row = i % xR, col = i / xR;
+    int t = 0;
+    auto yrow = row;
+    for (int krow = k.rows - 1; krow >= 0; krow--, yrow++) {
+      auto ycol = col;
+      for (int kcol = k.cols - 1; kcol >= 0; kcol--, ycol++) {
+        t += y(yrow, ycol) * k(krow, kcol);
+      }
+    }
+    if (weight != 0) {
+      t /= weight;
+    }
+    x(row, col) = t;
   });
 }
 
