@@ -15,6 +15,9 @@ private:
   int count;
   //Mutex when performing actions on the non-thread-safe STL utilities
   std::mutex m;
+  //Stuff for putting threads to sleepy sleepy
+  std::mutex m2;
+  std::condition_variable cv;
   //List of our workers
   std::vector<std::thread> threads;
   //Whether or not we're accepting tasks
@@ -39,10 +42,11 @@ private:
       //Lock the mutex and check for work
       m.lock();
       if (jobs.empty()) {
-        //No work, go back to sleep!
+        //No work, go (back) to sleep!
         m.unlock();
-        //TODO: condition variable
-        std::this_thread::yield();
+
+		std::unique_lock<std::mutex> lock(m2);
+		cv.wait(lock);
       } else {
         //Ermahgerd we have work! Leggo.
         auto f = std::move(jobs.front());
@@ -65,6 +69,10 @@ public:
   ~Pool() {
     //Signal shutdown to the workers
     shutdown->store(true);
+	{
+		std::unique_lock<std::mutex> lock(m2);
+		cv.notify_all();
+	}
     //Wait for all workers to finish current work
     for (auto i = threads.begin(); i != threads.end(); ++i) i->join();
     //Clean up our atomic variable
@@ -104,6 +112,8 @@ public:
     };
     jobs.emplace_back(std::async(std::launch::deferred, std::move(l)));
     m.unlock();
+	std::unique_lock<std::mutex> lock(m2);
+	cv.notify_one();
     return p->get_future();
   }
 
@@ -116,6 +126,8 @@ public:
     };
     jobs.emplace_back(std::async(std::launch::deferred, std::move(l)));
     m.unlock();
+	std::unique_lock<std::mutex> lock(m2);
+	cv.notify_one();
     return p->get_future();
   }
 };
