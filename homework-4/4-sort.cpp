@@ -39,7 +39,7 @@ void merge_sort(Pool &pool, const Iter &start, const Iter &end) {
 int main(int argc, char **argv) {
   Pool pool(std::thread::hardware_concurrency());
   srand(time(nullptr));
-  int array_size = 100000000;
+  int array_size = 10000000;
   puts("Filling ...");
   std::vector<int> v;
   v.reserve(array_size);
