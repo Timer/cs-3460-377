@@ -69,16 +69,17 @@ matrix binomial(int n) {
 }
 
 int main(int argc, char **argv) {
-  auto bmp = load_image("C:\\Users\\Joe\\Desktop\\test.jpg");
+  auto bmp = load_image("test.png");
   auto orig = bmp;
 
-  matrix kernel = binomial(3);
+  //If the program crashes, try decreasing this number (it's senstive to [large] image size).
+  matrix kernel = binomial(9);
 
   Pool pool;
   auto start = now();
   conv(pool, bmp, kernel);
   printf("Blurred in %d ms.\n", to_milliseconds(start, now()));
 
-  save_png(bmp, "C:\\Users\\Joe\\Desktop\\test.png");
+  save_png(bmp, "output.png");
   return 0;
 }
