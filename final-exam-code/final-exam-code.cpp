@@ -39,7 +39,7 @@ matrix histogram(const matrix &x) {
     if (value < 0) {
       h(0, 0)++;
     } else if (value >= 255) {
-      h(256, 0)++;
+      h(255, 0)++;
     } else {
       h(value, 0)++;
     }
