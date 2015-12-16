@@ -17,6 +17,8 @@ matrix operator*(const matrix &x, const matrix &y) {
   matrix z;
   z.create(x.rows, y.cols);
 
+  //Flatten the loops so we can fairly chunk up the work (assume the
+  //picture isn't the same width as it is height!)
   parallel_for(0u, x.rows * y.cols, [&](int k) {
     unsigned i = k / y.cols, j = k % y.cols;
     int zz = 0;
@@ -78,7 +80,7 @@ int mainExFixed() {
     value -= 17;
     printf("%d\n", value);
   });
-  f.wait();
+  f.wait();//Wait for the async work to complete so our value is consistent every time
   return value;
 }
 
