@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		lib\pool.hpp = lib\pool.hpp
 		lib\promise-polyfill.hpp = lib\promise-polyfill.hpp
 		lib\queue.hpp = lib\queue.hpp
+		lib\shared_mem.hpp = lib\shared_mem.hpp
 		lib\time.hpp = lib\time.hpp
 	EndProjectSection
 EndProject

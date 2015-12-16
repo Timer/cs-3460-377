@@ -1,9 +1,103 @@
 #ifndef SHARED_MEM_HPP
 #define SHARED_MEM_HPP
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <windows.h>
 #include <unordered_map>
+#include <memory>
+#include <mutex>
+#include <assert.h>
+#include <algorithm>
+#include <future>
+#include <atomic>
+#include "promise-polyfill.hpp"
 
 namespace cs477 {
+
+	class semaphore
+	{
+	public:
+		semaphore() : sem(nullptr), async(0) {}
+
+		semaphore(const semaphore &) = delete;
+		semaphore &operator =(const semaphore &) = delete;
+
+		semaphore(semaphore &&) = delete;
+		semaphore &operator =(semaphore &&) = delete;
+
+		~semaphore() {
+			if (sem) CloseHandle(sem);
+		}
+
+	public:
+		void init(const std::string &name, size_t value, size_t count) {
+			sem = CreateSemaphoreA(nullptr, (LONG)value, (LONG)count, name.c_str());
+			if (!sem)
+			{
+				std::system_error(GetLastError(), std::system_category());
+			}
+
+		}
+		void init(const std::string &name) {
+			sem = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, FALSE, name.c_str());
+			if (!sem)
+			{
+				std::system_error(GetLastError(), std::system_category());
+			}
+		}
+
+	public:
+		void wait() {
+			if (WaitForSingleObject(sem, INFINITE) != WAIT_OBJECT_0)
+			{
+				std::system_error(GetLastError(), std::system_category());
+			}
+		}
+		void release() {
+			ReleaseSemaphore(sem, 1, nullptr);
+		}
+
+		std::future<void> wait_async() {
+			struct wait_param
+			{
+				std::promise<void> p;
+			} *param = new wait_param;
+			auto f = param->p.get_future();
+
+			auto wait = CreateThreadpoolWait([](PTP_CALLBACK_INSTANCE, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT result)
+			{
+				auto param = (wait_param *)context;
+
+				if (result == WAIT_OBJECT_0)
+				{
+					param->p.set_value();
+				}
+				else
+				{
+					auto err = std::error_code{ (int)result, std::system_category() };
+					param->p.set_exception(std::make_exception_ptr(err));
+				}
+
+			}, param, nullptr);
+
+			SetThreadpoolWait(wait, sem, nullptr);
+
+			return f;
+		}
+
+	public:
+		void lock() { wait(); }
+		void unlock() { release(); }
+
+	private:
+		HANDLE sem;
+		std::atomic<int> async;
+
+		static void __stdcall wait_callback(PTP_CALLBACK_INSTANCE, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT result);
+	};
 
 namespace details {
 struct shm_handle {
@@ -23,7 +117,7 @@ struct shm_manager {
   }
 
   std::shared_ptr<shm_handle> open(const std::string &name, size_t size) {
-    lock_guard<> lock(mtx);
+    std::lock_guard<std::mutex> lock(mtx);
 
     auto pos = handles.find(name);
     if (pos != handles.end()) {
@@ -50,7 +144,7 @@ struct shm_manager {
   }
 
   void close(void *ptr) {
-    lock_guard<> lock(mtx);
+	  std::lock_guard<std::mutex> lock(mtx);
 
     for (auto i = handles.begin(); i != handles.end(); i++) {
       auto &kvp = *i;
@@ -61,7 +155,7 @@ struct shm_manager {
     }
   }
 
-  mutex mtx;
+  std::mutex mtx;
   std::unordered_map<std::string, std::shared_ptr<shm_handle>> handles;
 };
 
@@ -182,8 +276,8 @@ public:
     _full.release();
   }
 
-  future<void> write_async(T value) {
-    future<void> f = _empty.wait_async();
+  std::future<void> write_async(T value) {
+    std::future<void> f = _empty.wait_async();
     f = f.then([this, value](auto f) mutable {
       f.get();
       f = _lock.wait_async();
@@ -217,8 +311,8 @@ public:
     return t;
   }
 
-  future<T> read_async() {
-    future<T> f = _full.wait_async().then([this](auto f) mutable {
+  std::future<T> read_async() {
+    std::future<T> f = _full.wait_async().then([this](auto f) mutable {
       f.get();
       f = _lock.wait_async();
       return f.then([this](auto f) {
