@@ -54,9 +54,10 @@ matrix histogram(const matrix &x) {
  * - computation of some value over a loop. As such, these are often short lived
  * - and cause blocks in control flow. To mitigate the delay and increase the
  * - benefit of using parallel_for, the work is pushed into the pool so that thread
- * - creation is not experienced (which takes time), additionally, since the computation
- * - is most likely computationally expensive, the pool will only schedule the work
- * - when threads are available instead of maxing out the system and causing system lag.
+ * - creation is not experienced (which takes time), additionally, since the 
+ * - computation is most likely computationally expensive, the pool will only
+ * - schedule the work when threads are available instead of maxing out the system
+ * - and causing system lag.
  *
  * b. Give an example of when should you use create_thread instead of queue_work
  * to execute work asynchronously?
@@ -210,7 +211,8 @@ int main_q4() {
 * - begin waiting for a seat at the bar. Meaning, each person can reserve a seat
 * - by sitting (acquiring) it and then leaving (releasing) the seat, where then
 * - the fastest person to react can acquire the released seat. This experiences
-* - contention when the semaphore is fully acquired, but not at the same level as a mutex.
+* - contention when the semaphore is fully acquired, but not at the same level as
+* - a mutex.
 *
 * = Mutex:
 * - The bar has a single seat and the bar tender refuses to serve anyone who is
