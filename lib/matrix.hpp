@@ -136,6 +136,7 @@ matrix operator-(const matrix &x, const matrix &y) {
   return z;
 }
 
+#if !OVERRIDE_MATRIX_MULT
 matrix operator*(const matrix &x, const matrix &y) {
   if (x.cols != y.rows) {
     throw std::invalid_argument("Invalid arguments");
@@ -157,5 +158,6 @@ matrix operator*(const matrix &x, const matrix &y) {
 
   return z;
 }
+#endif
 
 #endif
