@@ -17,87 +17,77 @@
 
 namespace cs477 {
 
-	class semaphore
-	{
-	public:
-		semaphore() : sem(nullptr), async(0) {}
+class semaphore {
+public:
+  semaphore() : sem(nullptr), async(0) {}
 
-		semaphore(const semaphore &) = delete;
-		semaphore &operator =(const semaphore &) = delete;
+  semaphore(const semaphore &) = delete;
+  semaphore &operator=(const semaphore &) = delete;
 
-		semaphore(semaphore &&) = delete;
-		semaphore &operator =(semaphore &&) = delete;
+  semaphore(semaphore &&) = delete;
+  semaphore &operator=(semaphore &&) = delete;
 
-		~semaphore() {
-			if (sem) CloseHandle(sem);
-		}
+  ~semaphore() {
+    if (sem) CloseHandle(sem);
+  }
 
-	public:
-		void init(const std::string &name, size_t value, size_t count) {
-			sem = CreateSemaphoreA(nullptr, (LONG)value, (LONG)count, name.c_str());
-			if (!sem)
-			{
-				std::system_error(GetLastError(), std::system_category());
-			}
+public:
+  void init(const std::string &name, size_t value, size_t count) {
+    sem = CreateSemaphoreA(nullptr, (LONG) value, (LONG) count, name.c_str());
+    if (!sem) {
+      std::system_error(GetLastError(), std::system_category());
+    }
+  }
+  void init(const std::string &name) {
+    sem = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, FALSE, name.c_str());
+    if (!sem) {
+      std::system_error(GetLastError(), std::system_category());
+    }
+  }
 
-		}
-		void init(const std::string &name) {
-			sem = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, FALSE, name.c_str());
-			if (!sem)
-			{
-				std::system_error(GetLastError(), std::system_category());
-			}
-		}
+public:
+  void wait() {
+    if (WaitForSingleObject(sem, INFINITE) != WAIT_OBJECT_0) {
+      std::system_error(GetLastError(), std::system_category());
+    }
+  }
+  void release() {
+    ReleaseSemaphore(sem, 1, nullptr);
+  }
 
-	public:
-		void wait() {
-			if (WaitForSingleObject(sem, INFINITE) != WAIT_OBJECT_0)
-			{
-				std::system_error(GetLastError(), std::system_category());
-			}
-		}
-		void release() {
-			ReleaseSemaphore(sem, 1, nullptr);
-		}
+  std::future<void> wait_async() {
+    struct wait_param {
+      std::promise<void> p;
+    } *param = new wait_param;
+    auto f = param->p.get_future();
 
-		std::future<void> wait_async() {
-			struct wait_param
-			{
-				std::promise<void> p;
-			} *param = new wait_param;
-			auto f = param->p.get_future();
+    auto wait = CreateThreadpoolWait([](PTP_CALLBACK_INSTANCE, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT result) {
+      auto param = (wait_param *) context;
 
-			auto wait = CreateThreadpoolWait([](PTP_CALLBACK_INSTANCE, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT result)
-			{
-				auto param = (wait_param *)context;
+      if (result == WAIT_OBJECT_0) {
+        param->p.set_value();
+      } else {
+        auto err = std::error_code{(int) result, std::system_category()};
+        param->p.set_exception(std::make_exception_ptr(err));
+      }
 
-				if (result == WAIT_OBJECT_0)
-				{
-					param->p.set_value();
-				}
-				else
-				{
-					auto err = std::error_code{ (int)result, std::system_category() };
-					param->p.set_exception(std::make_exception_ptr(err));
-				}
+    }, param, nullptr);
 
-			}, param, nullptr);
+    SetThreadpoolWait(wait, sem, nullptr);
 
-			SetThreadpoolWait(wait, sem, nullptr);
+    return f;
+  }
 
-			return f;
-		}
+public:
+  void lock() { wait(); }
+  void unlock() { release(); }
 
-	public:
-		void lock() { wait(); }
-		void unlock() { release(); }
+private:
+  HANDLE sem;
+  std::atomic<int> async;
 
-	private:
-		HANDLE sem;
-		std::atomic<int> async;
-
-		static void __stdcall wait_callback(PTP_CALLBACK_INSTANCE, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT result);
-	};
+  static void __stdcall wait_callback(PTP_CALLBACK_INSTANCE, PVOID context, PTP_WAIT wait, TP_WAIT_RESULT result);
+};
 
 namespace details {
 struct shm_handle {
@@ -144,7 +134,7 @@ struct shm_manager {
   }
 
   void close(void *ptr) {
-	  std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::mutex> lock(mtx);
 
     for (auto i = handles.begin(); i != handles.end(); i++) {
       auto &kvp = *i;
