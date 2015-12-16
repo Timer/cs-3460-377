@@ -1,5 +1,5 @@
 COMPILER=g++-5
-FLAGS=-std=c++11
+FLAGS=-std=c++14
 
 EXECUTABLES=1-hello-world.out 2-prime-numbers.out 3-convolution.out 4-sort.out 5-static-serve.out
 
@@ -15,6 +15,10 @@ all:
 4-sort.out: homework-4/4-sort.cpp
 	$(COMPILER) $(FLAGS) -o $@ $^
 5-static-serve.out: homework-5/5-static-serve.cpp
+	$(COMPILER) $(FLAGS) -o $@ $^
+6-primes-ipc.out: homework-6/6-primes-ipc.cpp
+	$(COMPILER) $(FLAGS) -o $@ $^
+final.out: final-exam-code/final-exam-code.cpp
 	$(COMPILER) $(FLAGS) -o $@ $^
 
 clean:
