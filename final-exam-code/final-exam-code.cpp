@@ -187,6 +187,22 @@ int main_q4() {
 *
 * 5b. Describe the operation of a bar (sitting down, ordering a drink) in terms
 * of a semaphore and mutex.
+* = Semaphore:
+* - A bar has `n` number of seats, so a semapore is constructed accordingly.
+* - The semaphore (or a bar seat) can be aquired up to `n` times before parties
+* - begin waiting for a seat at the bar. Meaning, each person can reserve a seat
+* - by sitting (aquiring) it and then leaving (releasing) the seat, where then
+* - the fastest person to react can aquire the released seat. This experiences
+* - contention when the semaphore is fully aquired, but not at the same level as a mutex.
+*
+* = Mutex:
+* - The bar has a single seat and the bar tender refuses to serve anyone who is
+* - not sitting at that seat. The seat can be locked (sat in) and then unlocked
+* - (individual leaves). When the seat is unlocked, the fastest person to react
+* - can then sit (lock) in the seat. This means that after the seat is taken,
+* - every new person who wishes to have service must wait, which creates contention
+* - in the form of a large blob of people (many threads waiting in the kernel on
+* - the lock).
 */
 
 int main(int argc, char **argv) {
