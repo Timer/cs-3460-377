@@ -138,4 +138,9 @@ void parallel_for(Iter start, Iter end, Fn fn) {
 	p.parallel_for(start, end, fn);
 }
 
+template <typename Fn>
+std::future<std::result_of_t<Fn()>> queue_work(Fn fn) {
+	return std::async(std::launch::async, std::move(fn));
+}
+
 #endif
