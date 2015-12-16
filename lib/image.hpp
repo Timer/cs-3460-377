@@ -79,90 +79,79 @@ inline matrix load_image(const std::tr2::sys::path &path) {
   return x;
 }
 
-inline matrix load_image(const void *buf, size_t len)
-{
-	auto hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+inline matrix load_image(const void *buf, size_t len) {
+  auto hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-	matrix x;
+  matrix x;
 
-	IWICImagingFactory *wic = nullptr;
-	IWICStream *stream = nullptr;
-	IWICBitmapDecoder *decoder = nullptr;
-	IWICBitmapFrameDecode *frame = nullptr;
-	IWICFormatConverter *convert = nullptr;
+  IWICImagingFactory *wic = nullptr;
+  IWICStream *stream = nullptr;
+  IWICBitmapDecoder *decoder = nullptr;
+  IWICBitmapFrameDecode *frame = nullptr;
+  IWICFormatConverter *convert = nullptr;
 
-	hr = [&]
-	{
+  hr = [&] {
 
-		HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory2, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory2), reinterpret_cast<LPVOID*>(&wic));
-		if (FAILED(hr))
-		{
-			hr = CoCreateInstance(CLSID_WICImagingFactory1, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), reinterpret_cast<LPVOID*>(&wic));
-		}
-		if (FAILED(hr))
-		{
-			return hr;
-		}
+    HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory2, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory2), reinterpret_cast<LPVOID *>(&wic));
+    if (FAILED(hr)) {
+      hr = CoCreateInstance(CLSID_WICImagingFactory1, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), reinterpret_cast<LPVOID *>(&wic));
+    }
+    if (FAILED(hr)) {
+      return hr;
+    }
 
-		wic->CreateStream(&stream);
-		hr = stream->InitializeFromMemory((BYTE *)buf, (DWORD)len);
-		if (FAILED(hr))
-		{
-			return hr;
-		}
+    wic->CreateStream(&stream);
+    hr = stream->InitializeFromMemory((BYTE *) buf, (DWORD) len);
+    if (FAILED(hr)) {
+      return hr;
+    }
 
-		wic->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &decoder);
-		hr = decoder->GetFrame(0, &frame);
-		if (FAILED(hr))
-		{
-			return hr;
-		}
+    wic->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &decoder);
+    hr = decoder->GetFrame(0, &frame);
+    if (FAILED(hr)) {
+      return hr;
+    }
 
-		wic->CreateFormatConverter(&convert);
-		hr = convert->Initialize(frame, GUID_WICPixelFormat8bppGray, WICBitmapDitherTypeNone, nullptr, 0, WICBitmapPaletteTypeMedianCut);
-		if (FAILED(hr))
-		{
-			return hr;
-		}
+    wic->CreateFormatConverter(&convert);
+    hr = convert->Initialize(frame, GUID_WICPixelFormat8bppGray, WICBitmapDitherTypeNone, nullptr, 0, WICBitmapPaletteTypeMedianCut);
+    if (FAILED(hr)) {
+      return hr;
+    }
 
-		unsigned w, h;
-		convert->GetSize(&w, &h);
-		BYTE *buf = new BYTE[w * h];
-		hr = convert->CopyPixels(nullptr, w, w * h, buf);
-		if (SUCCEEDED(hr))
-		{
-			x.create(h, w);
+    unsigned w, h;
+    convert->GetSize(&w, &h);
+    BYTE *buf = new BYTE[w * h];
+    hr = convert->CopyPixels(nullptr, w, w * h, buf);
+    if (SUCCEEDED(hr)) {
+      x.create(h, w);
 
-			auto ptr = buf;
-			auto end = ptr + w * h;
-			auto xptr = x.data;
-			while (ptr != end)
-			{
-				*xptr++ = *ptr++;
-			}
-		}
+      auto ptr = buf;
+      auto end = ptr + w * h;
+      auto xptr = x.data;
+      while (ptr != end) {
+        *xptr++ = *ptr++;
+      }
+    }
 
-		delete[]buf;
-		return hr;
-	}();
+    delete[] buf;
+    return hr;
+  }();
 
-	if (convert) convert->Release();
-	if (frame) frame->Release();
-	if (decoder) decoder->Release();
-	if (wic) wic->Release();
+  if (convert) convert->Release();
+  if (frame) frame->Release();
+  if (decoder) decoder->Release();
+  if (wic) wic->Release();
 
-	CoUninitialize();
+  CoUninitialize();
 
-	return x;
+  return x;
 }
 
-
-std::future<matrix> load_image_async(const std::tr2::sys::path &path)
-{
-	return Promise::then(read_file_async(path.string().c_str()).share(), [](auto f) {
-		auto data = f.get();
-		return load_image(data.c_str(), data.size());
-	});
+std::future<matrix> load_image_async(const std::tr2::sys::path &path) {
+  return Promise::then(read_file_async(path.string().c_str()).share(), [](auto f) {
+    auto data = f.get();
+    return load_image(data.c_str(), data.size());
+  });
 }
 
 // Writes the matrix as an 8-bit-per-pixel PNG

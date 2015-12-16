@@ -85,24 +85,24 @@ int mainExFixed() {
 /* 4 completed */
 concurrent_queue<matrix> pipeline;
 std::future<matrix> blur_image_async(matrix x) {
-	return std::future<matrix>();
+  return std::future<matrix>();
 }
 
 int main_q4() {
-	auto pipeline_thread = std::thread([] {
-		for (;;) {
-			auto x = pipeline.pop();
-			auto b = blur_image_async(std::move(x)).share();
-			Promise::then(b, [](auto f) {
-				matrix h = histogram(f.get());
-			}).wait();
-		}
-	});
-	Promise::then(load_image_async("image.png").share(), [](auto f) {
-		pipeline.push(f.get());
-	}).wait();
-	pipeline_thread.join();
-	return 0;
+  auto pipeline_thread = std::thread([] {
+    for (;;) {
+      auto x = pipeline.pop();
+      auto b = blur_image_async(std::move(x)).share();
+      Promise::then(b, [](auto f) {
+        matrix h = histogram(f.get());
+      }).wait();
+    }
+  });
+  Promise::then(load_image_async("image.png").share(), [](auto f) {
+    pipeline.push(f.get());
+  }).wait();
+  pipeline_thread.join();
+  return 0;
 }
 /* 4 end */
 
