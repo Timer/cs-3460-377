@@ -32,15 +32,18 @@ matrix operator*(const matrix &x, const matrix &y) {
 
 /* 1b */
 matrix histogram(const matrix &x) {
-	matrix h{ 256, 1 };
-	parallel_for(0u, x.rows * x.cols, [&](int k) {
-		unsigned i = k / x.cols, j = k % x.cols;
-		auto value = x(i, j);
-		if (value < 0)	h(0, 0)++;
-		else if (value >= 255) h(256, 0)++;
-		else	h(value, 0)++;
-	});
-	return h;
+  matrix h{256, 1};
+  parallel_for(0u, x.rows * x.cols, [&](int k) {
+    unsigned i = k / x.cols, j = k % x.cols;
+    auto value = x(i, j);
+    if (value < 0)
+      h(0, 0)++;
+    else if (value >= 255)
+      h(256, 0)++;
+    else
+      h(value, 0)++;
+  });
+  return h;
 }
 
 /*
