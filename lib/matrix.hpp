@@ -5,7 +5,9 @@
 // A simple matrix
 struct matrix {
 public:
-  matrix() : cols(0), rows(0), data(nullptr) {}
+	matrix() : cols(0), rows(0), data(nullptr) {}
+
+	matrix(int c, int r) : cols(c), rows(r), data(nullptr) {}
 
   matrix(matrix &&x) : matrix() {
     std::swap(cols, x.cols);
