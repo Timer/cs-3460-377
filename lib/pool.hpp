@@ -132,4 +132,10 @@ public:
   }
 };
 
+template <typename Iter, typename Fn>
+void parallel_for(Iter start, Iter end, Fn fn) {
+	Pool p;
+	p.parallel_for(start, end, fn);
+}
+
 #endif
