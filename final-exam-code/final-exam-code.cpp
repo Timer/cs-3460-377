@@ -4,28 +4,25 @@
 #include "../lib/pool.hpp"
 
 /* 1a */
-matrix operator *(const matrix &x, const matrix &y)
-{
-	if (x.cols != y.rows)
-	{
-		throw std::invalid_argument("Invalid arguments");
-	}
+matrix operator*(const matrix &x, const matrix &y) {
+  if (x.cols != y.rows) {
+    throw std::invalid_argument("Invalid arguments");
+  }
 
-	matrix z;
-	z.create(x.rows, y.cols);
+  matrix z;
+  z.create(x.rows, y.cols);
 
-	parallel_for(0u, x.rows * y.cols, [&](int k) {
-		unsigned i = k / y.cols, j = k % y.cols;
-		int zz = 0;
-		for (unsigned k = 0; k < x.cols; k++)
-		{
-			zz += x(i, k) * y(k, j);
-		}
-		z(i, j) = zz;
-	});
-	return z;
+  parallel_for(0u, x.rows * y.cols, [&](int k) {
+    unsigned i = k / y.cols, j = k % y.cols;
+    int zz = 0;
+    for (unsigned k = 0; k < x.cols; k++) {
+      zz += x(i, k) * y(k, j);
+    }
+    z(i, j) = zz;
+  });
+  return z;
 }
- /*
+/*
  * 2. parallel_for uses the queue_work function instead of create_thread.
  * a. Why?
  * - Parallel for loops are typically used in data problems which require the
@@ -45,18 +42,15 @@ matrix operator *(const matrix &x, const matrix &y)
  * - Knowing this, simply spawn a new thread!
  */
 
-
 /* 3 */
 //Consider the following program
-int mainEx()
-{
-	int value = 32;
-	queue_work([&]
-	{
-		value -= 17;
-		printf("%d\n", value);
-	});
-	return value;
+int mainEx() {
+  int value = 32;
+  queue_work([&] {
+    value -= 17;
+    printf("%d\n", value);
+  });
+  return value;
 }
 
 /*
@@ -72,18 +66,15 @@ int mainEx()
 */
 
 /* 3b */
-int mainExFixed()
-{
-	int value = 32;
-	auto f = queue_work([&]
-	{
-		value -= 17;
-		printf("%d\n", value);
-	});
-	f.wait();
-	return value;
+int mainExFixed() {
+  int value = 32;
+  auto f = queue_work([&] {
+    value -= 17;
+    printf("%d\n", value);
+  });
+  f.wait();
+  return value;
 }
-
 
 int main(int argc, char **argv) {
   return 0;
