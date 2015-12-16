@@ -1,5 +1,6 @@
 #define OVERRIDE_MATRIX_MULT true
 
+#include <string.h>
 #include <thread>
 #include <mutex>
 #include <future>
@@ -172,7 +173,13 @@ matrix binomial(int n) {
   return y * x;
 }
 
-concurrent_queue<matrix> pipeline;
+struct pipeline_container {
+  std::promise p;
+  std::matrix m;
+};
+
+concurrent_queue<pipeline_container> pipeline;
+
 std::future<matrix> blur_image_async(matrix x) {
   return std::async(std::launch::async, [](matrix bmp) {
     matrix kernel = binomial(3);
@@ -181,19 +188,31 @@ std::future<matrix> blur_image_async(matrix x) {
   }, std::move(x));
 }
 
+std::future<matrix> queue_pipeline(matrix m) {
+  pipeline_thread c;
+  c.m = std::move(m);
+  pipeline.push(c);
+  return c.p.get_future();
+}
+
 int main_q4() {
   auto pipeline_thread = std::thread([] {
     for (;;) {
       auto x = pipeline.pop();
-      auto b = blur_image_async(std::move(x)).share();
-      Promise::then(b, [](auto f) {
-        matrix h = histogram(f.get());
+      auto p = x.p;
+      auto b = blur_image_async(std::move(x.m)).share();
+      Promise::then(b, [p](auto f) {
+        p.set_value(f.get());
       }).wait();
     }
   });
+
   Promise::then(load_image_async("image.png").share(), [](auto f) {
-    pipeline.push(f.get());
-  }).wait();
+    Promise::then(queue_pipeline(f.get()), [](auto f) {
+      matrix h = histogram(f.get());
+    });
+  });
+
   pipeline_thread.join();
   return 0;
 }
