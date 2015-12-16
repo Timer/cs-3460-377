@@ -1,6 +1,7 @@
 #define OVERRIDE_MATRIX_MULT true
 
 #include <thread>
+#include <mutex>
 #include <future>
 #include "../lib/matrix.hpp"
 #include "../lib/pool.hpp"
@@ -32,15 +33,19 @@ matrix operator*(const matrix &x, const matrix &y) {
 
 /* 1b */
 matrix histogram(const matrix &x) {
+  std::mutex mutex;
   matrix h{256, 1};
   parallel_for(0u, x.rows * x.cols, [&](int k) {
     unsigned i = k / x.cols, j = k % x.cols;
     auto value = x(i, j);
     if (value < 0) {
+      std::lock_guard<std::mutex> lock(mutex);
       h(0, 0)++;
     } else if (value >= 255) {
+      std::lock_guard<std::mutex> lock(mutex);
       h(255, 0)++;
     } else {
+      std::lock_guard<std::mutex> lock(mutex);
       h(value, 0)++;
     }
   });
@@ -54,7 +59,7 @@ matrix histogram(const matrix &x) {
  * - computation of some value over a loop. As such, these are often short lived
  * - and cause blocks in control flow. To mitigate the delay and increase the
  * - benefit of using parallel_for, the work is pushed into the pool so that thread
- * - creation is not experienced (which takes time), additionally, since the 
+ * - creation is not experienced (which takes time), additionally, since the
  * - computation is most likely computationally expensive, the pool will only
  * - schedule the work when threads are available instead of maxing out the system
  * - and causing system lag.
