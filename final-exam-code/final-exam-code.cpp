@@ -22,6 +22,7 @@ matrix operator*(const matrix &x, const matrix &y) {
   });
   return z;
 }
+
 /*
  * 2. parallel_for uses the queue_work function instead of create_thread.
  * a. Why?
@@ -65,7 +66,7 @@ int mainEx() {
 * 3. mainEx returns 15 and prints 15
 */
 
-/* 3b */
+/* 3b - Correct the defect. */
 int mainExFixed() {
   int value = 32;
   auto f = queue_work([&] {
@@ -75,6 +76,19 @@ int mainExFixed() {
   f.wait();
   return value;
 }
+
+/*
+* 5a. How does a semaphore differ from mutex?
+* - A semaphore differs from a mutex in that it is not a mutual exclusion lock,
+* - a semaphore, unlike a mutex, can be aquired multiple times (depending on how
+* - the sempahore is created) unlike a mutex which is strictly locked or unlocked.
+* - Additionally, a semaphore lives in the file system and is not restrictied to the
+* - process in which it was created (like a mutex), which makes it useful to lock
+* - access to things like shared memory pools across processes.
+*
+* 5b. Describe the operation of a bar (sitting down, ordering a drink) in terms
+* of a semaphore and mutex.
+*/
 
 int main(int argc, char **argv) {
   return 0;
