@@ -109,6 +109,7 @@ int mainExFixed() {
 }
 
 /* 4 completed */
+// CONV - START
 void conv(matrix &x, const matrix &k) {
   matrix y;
   y.create(x.rows + k.rows, x.cols + k.cols);
@@ -172,17 +173,18 @@ matrix binomial(int n) {
 
   return y * x;
 }
+//CONV - END
 
 struct pipeline_container {
-  std::promise p;
-  std::matrix m;
+  std::promise<matrix> p;
+  matrix m;
 };
 
 concurrent_queue<pipeline_container> pipeline;
 
 std::future<matrix> blur_image_async(matrix x) {
-  pipeline_thread c;
-  c.m = std::move(m);
+  pipeline_container c;
+  c.m = std::move(x);
   pipeline.push(c);
   return c.p.get_future();
 }
@@ -192,8 +194,8 @@ int main_q4() {
     matrix kernel = binomial(3);
     for (;;) {
       auto s = pipeline.pop();
-      matrix x = conv(s.m, kernel);
-      s.p.set_value(m);
+      conv(s.m, kernel);
+      s.p.set_value(s.m);
     }
   });
 
