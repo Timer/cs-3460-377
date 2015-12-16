@@ -36,12 +36,13 @@ matrix histogram(const matrix &x) {
   parallel_for(0u, x.rows * x.cols, [&](int k) {
     unsigned i = k / x.cols, j = k % x.cols;
     auto value = x(i, j);
-    if (value < 0)
+    if (value < 0) {
       h(0, 0)++;
-    else if (value >= 255)
+    } else if (value >= 255) {
       h(256, 0)++;
-    else
+    } else {
       h(value, 0)++;
+    }
   });
   return h;
 }
@@ -195,21 +196,21 @@ int main_q4() {
 /*
 * 5a. How does a semaphore differ from mutex?
 * - A semaphore differs from a mutex in that it is not a mutual exclusion lock,
-* - a semaphore, unlike a mutex, can be aquired multiple times (depending on how
-* - the sempahore is created) unlike a mutex which is strictly locked or unlocked.
-* - Additionally, a semaphore lives in the file system and is not restrictied to the
+* - a semaphore, unlike a mutex, can be acquired multiple times (depending on how
+* - the semaphore is created) unlike a mutex which is strictly locked or unlocked.
+* - Additionally, a semaphore lives in the file system and is not restricted to the
 * - process in which it was created (like a mutex), which makes it useful to lock
 * - access to things like shared memory pools across processes.
 *
 * 5b. Describe the operation of a bar (sitting down, ordering a drink) in terms
 * of a semaphore and mutex.
 * = Semaphore:
-* - A bar has `n` number of seats, so a semapore is constructed accordingly.
-* - The semaphore (or a bar seat) can be aquired up to `n` times before parties
+* - A bar has `n` number of seats, so a semaphore is constructed accordingly.
+* - The semaphore (or a bar seat) can be acquired up to `n` times before parties
 * - begin waiting for a seat at the bar. Meaning, each person can reserve a seat
-* - by sitting (aquiring) it and then leaving (releasing) the seat, where then
-* - the fastest person to react can aquire the released seat. This experiences
-* - contention when the semaphore is fully aquired, but not at the same level as a mutex.
+* - by sitting (acquiring) it and then leaving (releasing) the seat, where then
+* - the fastest person to react can acquire the released seat. This experiences
+* - contention when the semaphore is fully acquired, but not at the same level as a mutex.
 *
 * = Mutex:
 * - The bar has a single seat and the bar tender refuses to serve anyone who is
