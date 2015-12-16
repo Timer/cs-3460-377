@@ -181,14 +181,6 @@ struct pipeline_container {
 concurrent_queue<pipeline_container> pipeline;
 
 std::future<matrix> blur_image_async(matrix x) {
-  return std::async(std::launch::async, [](matrix bmp) {
-    matrix kernel = binomial(3);
-    conv(bmp, kernel);
-    return std::move(bmp);
-  }, std::move(x));
-}
-
-std::future<matrix> queue_pipeline(matrix m) {
   pipeline_thread c;
   c.m = std::move(m);
   pipeline.push(c);
@@ -197,18 +189,16 @@ std::future<matrix> queue_pipeline(matrix m) {
 
 int main_q4() {
   auto pipeline_thread = std::thread([] {
+    matrix kernel = binomial(3);
     for (;;) {
-      auto x = pipeline.pop();
-      auto p = x.p;
-      auto b = blur_image_async(std::move(x.m)).share();
-      Promise::then(b, [p](auto f) {
-        p.set_value(f.get());
-      }).wait();
+      auto s = pipeline.pop();
+      matrix x = conv(s.m, kernel);
+      s.p.set_value(m);
     }
   });
 
   Promise::then(load_image_async("image.png").share(), [](auto f) {
-    Promise::then(queue_pipeline(f.get()), [](auto f) {
+    Promise::then(blur_image_async(std::move(f.get())), [](auto f) {
       matrix h = histogram(f.get());
     });
   });
