@@ -200,7 +200,7 @@ int main_q4() {
   });
 
   Promise::then(load_image_async("image.png").share(), [](auto f) {
-    Promise::then(blur_image_async(std::move(f.get())), [](auto f) {
+    Promise::then(blur_image_async(f.get()), [](auto f) {
       matrix h = histogram(f.get());
     });
   });
