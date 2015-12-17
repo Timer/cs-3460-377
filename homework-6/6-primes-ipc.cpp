@@ -15,10 +15,22 @@ int main(int argc, char **argv) {
   rp_queue = std::make_shared<cs477::bounded_queue<primes_response_1000, BLOCK_COUNT>>();
   rp_queue->create("primes-rp-queue");
 
+  auto requests = 0;
+  auto curr = 0;
   for (;;) {
-    puts("Requesting work ...");
-    auto w = rq_queue->read();
-    puts("Got work!");
+    primes_request_1000 r;
+    r.start = curr;
+    curr = min(curr + 1000, COMPUTE_TO);
+    r.end = curr;
+    rq_queue->write(r);
+    ++requests;
+    if (curr == COMPUTE_TO) break;
+  }
+
+  for (auto i = 0; i < requests; ++i) {
+    puts("Requesting");
+    auto r = rp_queue->read();
+    puts("Got one");
   }
   return 0;
 }
