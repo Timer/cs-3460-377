@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		lib\matrix.hpp = lib\matrix.hpp
 		lib\network.hpp = lib\network.hpp
 		lib\pool.hpp = lib\pool.hpp
+		lib\process.hpp = lib\process.hpp
 		lib\promise-polyfill.hpp = lib\promise-polyfill.hpp
 		lib\queue.hpp = lib\queue.hpp
 		homework-6\shared.hpp = homework-6\shared.hpp
