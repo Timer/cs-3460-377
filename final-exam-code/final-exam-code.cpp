@@ -35,11 +35,12 @@ matrix operator*(const matrix &x, const matrix &y) {
 /* 1b */
 matrix histogram(const matrix &x) {
   std::mutex mutex;
-  matrix h{256, 1};
+  matrix h{1, 256};
+  h.create(h.rows, h.cols);
   parallel_for(0u, x.rows * x.cols, [&](int k) {
     unsigned i = k / x.cols, j = k % x.cols;
     auto value = x(i, j);
-    if (value < 0) {
+    if (value <= 0) {
       std::lock_guard<std::mutex> lock(mutex);
       h(0, 0)++;
     } else if (value >= 255) {
@@ -195,7 +196,7 @@ int main_q4() {
     for (;;) {
       auto s = pipeline.pop();
       conv(s->m, kernel);
-      s->p.set_value(s->m);
+      s->p.set_value(std::move(s->m));
     }
   });
 
